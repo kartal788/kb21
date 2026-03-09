@@ -13,7 +13,7 @@ from deep_translator import GoogleTranslator
 
 # ----------------- Configuration -----------------
 DELAY = 0
-tmdb = aioTMDb(key=Telegram.TMDB_API, language="en-US", region="US")
+tmdb = aioTMDb(key=Telegram.TMDB_API, language="tr-TR", region="TR")
 
 # Cache dictionaries (per run)
 IMDB_CACHE: dict = {}
