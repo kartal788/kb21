@@ -9,6 +9,7 @@ from Backend.config import Telegram
 import Backend
 from Backend.logger import LOGGER
 from Backend.helper.encrypt import encode_string
+from deep_translator import GoogleTranslator
 
 # ----------------- Configuration -----------------
 DELAY = 0
@@ -19,6 +20,7 @@ IMDB_CACHE: dict = {}
 TMDB_SEARCH_CACHE: dict = {}
 TMDB_DETAILS_CACHE: dict = {}
 EPISODE_CACHE: dict = {}
+TRANSLATE_CACHE: dict = {}
 
 # Concurrency semaphore for external API calls
 API_SEMAPHORE = asyncio.Semaphore(12)
@@ -150,6 +152,27 @@ async def _tmdb_episode_details(tv_id, season, episode):
     except Exception:
         EPISODE_CACHE[key] = None
         return None
+
+def translate_text_safe(text: str) -> str:
+    if not text:
+        return ""
+
+    text = str(text).strip()
+
+    # çok kısa metinleri çevirmiyoruz
+    if len(text) < 3:
+        return text
+
+    if text in TRANSLATE_CACHE:
+        return TRANSLATE_CACHE[text]
+
+    try:
+        translated = GoogleTranslator(source="auto", target="tr").translate(text)
+    except Exception:
+        translated = text
+
+    TRANSLATE_CACHE[text] = translated
+    return translated
 
 # ----------------- Main Metadata -----------------
 async def metadata(filename: str, channel: int, msg_id, override_id: str = None) -> dict | None:
@@ -335,7 +358,7 @@ async def fetch_tv_metadata(title, season, episode, encoded_string, year=None, q
             "title": tv.name,
             "year": getattr(tv.first_air_date, "year", 0) if getattr(tv, "first_air_date", None) else 0,
             "rate": getattr(tv, "vote_average", 0) or 0,
-            "description": tv.overview or "",
+            "description": translate_text_safe(tv.overview),
             "poster": format_tmdb_image(tv.poster_path),
             "backdrop": format_tmdb_image(tv.backdrop_path, "original"),
             "logo": get_tmdb_logo(getattr(tv, "images", None)),
@@ -346,9 +369,9 @@ async def fetch_tv_metadata(title, season, episode, encoded_string, year=None, q
 
             "season_number": season,
             "episode_number": episode,
-            "episode_title": getattr(ep, "name", f"S{season}E{episode}") if ep else f"S{season}E{episode}",
+            "episode_title": translate_text_safe(getattr(ep, "name", f"S{season}E{episode}")) if ep else f"S{season}E{episode}",
             "episode_backdrop": format_tmdb_image(getattr(ep, "still_path", None), "original") if ep else "",
-            "episode_overview": getattr(ep, "overview", "") if ep else "",
+           "episode_overview": translate_text_safe(getattr(ep, "overview", "")) if ep else "",
             "episode_released": (
                 ep.air_date.strftime("%Y-%m-%dT05:00:00.000Z")
                 if getattr(ep, "air_date", None)
@@ -373,7 +396,7 @@ async def fetch_tv_metadata(title, season, episode, encoded_string, year=None, q
         "title": imdb.get("title", title),
         "year": imdb.get("releaseDetailed", {}).get("year", 0),
         "rate": imdb.get("rating", {}).get("star", 0),
-        "description": imdb.get("plot", ""),
+        "description": translate_text_safe(imdb.get("plot", "")),
         "poster": images["poster"],
         "backdrop": images["backdrop"],
         "logo": images["logo"],
@@ -384,9 +407,9 @@ async def fetch_tv_metadata(title, season, episode, encoded_string, year=None, q
 
         "season_number": season,
         "episode_number": episode,
-        "episode_title": ep.get("title", f"S{season}E{episode}"),
+        "episode_title": translate_text_safe(ep.get("title", f"S{season}E{episode}")),
         "episode_backdrop": ep.get("image", ""),
-        "episode_overview": ep.get("plot", ""),
+        "episode_overview": translate_text_safe(ep.get("plot", "")),
         "episode_released": str(ep.get("released", "")),
 
         "quality": quality,
@@ -491,7 +514,7 @@ async def fetch_movie_metadata(title, encoded_string, year=None, quality=None, d
             "title": movie.title,
             "year": getattr(movie.release_date, "year", 0) if getattr(movie, "release_date", None) else 0,
             "rate": getattr(movie, "vote_average", 0) or 0,
-            "description": movie.overview or "",
+            "description": translate_text_safe(movie.overview),
             "poster": format_tmdb_image(movie.poster_path),
             "backdrop": format_tmdb_image(movie.backdrop_path, "original"),
             "logo": get_tmdb_logo(getattr(movie, "images", None)),
@@ -515,7 +538,7 @@ async def fetch_movie_metadata(title, encoded_string, year=None, quality=None, d
         "title": imdb.get("title", title),
         "year": imdb.get("releaseDetailed", {}).get("year", 0),
         "rate": imdb.get("rating", {}).get("star", 0),
-        "description": imdb.get("plot", ""),
+        "description": translate_text_safe(imdb.get("plot", "")),
         "poster": images["poster"],
         "backdrop": images["backdrop"],
         "logo": images["logo"],
