@@ -22,6 +22,44 @@ TMDB_DETAILS_CACHE: dict = {}
 EPISODE_CACHE: dict = {}
 TRANSLATE_CACHE: dict = {}
 
+GENRE_TUR_ALIASES = {
+  "action": "Aksiyon",
+  "sci-fi": "Bilim Kurgu",
+  "science fiction": "Bilim Kurgu",
+  "film-noir": "Kara Film",
+  "game-show": "Oyun Gösterisi",
+  "short": "Kısa",
+  "sport": "Spor",
+  "adventure": "Macera",
+  "animation": "Animasyon",
+  "biography": "Biyografi",
+  "comedy": "Komedi",
+  "crime": "Suç",
+  "documentary": "Belgesel",
+  "drama": "Dram",
+  "family": "Aile",
+  "news": "Haberler",
+  "fantasy": "Fantastik",
+  "history": "Tarih",
+  "horror": "Korku",
+  "music": "Müzik",
+  "musical": "Müzikal",
+  "mystery": "Gizem",
+  "romance": "Romantik",
+  "tv movie": "TV Filmi",
+  "thriller": "Gerilim",
+  "war": "Savaş",
+  "western": "Vahşi Batı",
+  "action & adventure": "Aksiyon ve Macera",
+  "kids": "Çocuklar",
+  "reality": "Gerçeklik",
+  "reality-tv": "Gerçeklik",
+  "sci-fi & fantasy": "Bilim Kurgu ve Fantazi",
+  "soap": "Pembe Dizi",
+  "war & politics": "Savaş ve Politika",
+  "talk": "Talk-Show",
+}
+
 # Concurrency semaphore for external API calls
 API_SEMAPHORE = asyncio.Semaphore(12)
 
@@ -173,6 +211,18 @@ def translate_text_safe(text: str) -> str:
 
     TRANSLATE_CACHE[text] = translated
     return translated
+
+def tur_genre_normalize(genres):
+    if not genres:
+        return []
+
+    out = []
+
+    for g in genres:
+        key = g.lower().replace("-", " ").strip()
+        out.append(GENRE_TUR_ALIASES.get(key, g))
+
+    return out
 
 # ----------------- Main Metadata -----------------
 async def metadata(filename: str, channel: int, msg_id, override_id: str = None) -> dict | None:
@@ -362,7 +412,7 @@ async def fetch_tv_metadata(title, season, episode, encoded_string, year=None, q
             "poster": format_tmdb_image(tv.poster_path),
             "backdrop": format_tmdb_image(tv.backdrop_path, "original"),
             "logo": get_tmdb_logo(getattr(tv, "images", None)),
-            "genres": [g.name for g in (tv.genres or [])],
+            "genres": tur_genre_normalize([g.name for g in (tv.genres or [])]),
             "media_type": "tv",
             "cast": cast,
             "runtime": str(runtime),
@@ -402,7 +452,7 @@ async def fetch_tv_metadata(title, season, episode, encoded_string, year=None, q
         "logo": images["logo"],
         "cast": imdb.get("cast", []),
         "runtime": str(imdb.get("runtime") or ""),          
-        "genres": imdb.get("genre", []),
+        ""genres": tur_genre_normalize(imdb.get("genre", [])),
         "media_type": "tv",
 
         "season_number": season,
@@ -521,7 +571,7 @@ async def fetch_movie_metadata(title, encoded_string, year=None, quality=None, d
             "cast": cast_names,
             "runtime": str(runtime),
             "media_type": "movie",
-            "genres": [g.name for g in (movie.genres or [])],
+            "genres": tur_genre_normalize([g.name for g in (movie.genres or [])]),
             "quality": quality,
             "encoded_string": encoded_string,
         }
@@ -545,7 +595,7 @@ async def fetch_movie_metadata(title, encoded_string, year=None, quality=None, d
         "cast": imdb.get("cast", []),
         "runtime": str(imdb.get("runtime") or ""),
         "media_type": "movie",
-        "genres": imdb.get("genre", []),
+        "genres": tur_genre_normalize(imdb.get("genre", [])),
         "quality": quality,
         "encoded_string": encoded_string,
     }
