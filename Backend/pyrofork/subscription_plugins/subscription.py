@@ -44,7 +44,7 @@ async def plan_selection(client: Client, callback_query: CallbackQuery):
 
     text = (
         f"<b>✅ Plan Seçildi: {plan['days']} Gün</b>\n\n"
-        f"<b>💰 Price:</b> {plan['price']} TL\n"
+        f"<b>💰 Ödeme:</b> {plan['price']} TL\n"
         f"<b>📅 Son Kullanma Tarihi (şimdi onaylanırsa):</b> {expiry_str}\n\n"
         f"<b>📋 Ödeme Talimatları:</b>\n"
         f"1. Yöneticiye {plan['price']} TL ödeme yapın.\n"
@@ -57,7 +57,7 @@ async def plan_selection(client: Client, callback_query: CallbackQuery):
 
     # Add cancel button
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("❌ İptal Et", callback_data="cancel_payment")]
+        [InlineKeyboardButton("❌ iptal et", callback_data="cancel_payment")]
     ])
 
     dm_sent = False
@@ -239,7 +239,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
                     member_limit=1,
                     expire_date=datetime.utcnow() + timedelta(days=1)
                 )
-                invite_text = f"\n\n🔗 <b>Group Invite:</b> {invite_link.invite_link}"
+                invite_text = f"\n\n🔗 <b>Grup Daveti:</b> {invite_link.invite_link}"
             except Exception:
                 invite_text = ""
 
