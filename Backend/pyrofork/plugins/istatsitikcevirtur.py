@@ -466,11 +466,6 @@ async def istatistik(client: Client, message: Message):
 
     await message.reply_text(text, parse_mode=enums.ParseMode.HTML)
 
-# ---------------- CALLBACK QUERY ----------------
-@Client.on_callback_query()
-async def _cb(client: Client, query: CallbackQuery):
-    if query.data=="stop":
-        await handle_stop(query)
 # ---------- benzerleri sil ----------
 @Client.on_message(filters.command("aynivideolarisil") & filters.private & filters.user(OWNER_ID))
 async def benzerleri_sil(client: Client, message: Message):
