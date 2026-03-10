@@ -359,9 +359,9 @@ async def configure_addon(token: str):
     <div class="steps">
       <b>Veya manuel olarak yükleyin:</b>
       <ol>
-        <li>Stremio'yu açın → Eklentiler (Add-ons)</b> tab</li>
-        <li>Add addon kısmına tıklayın</b> icon</li>
-        <li>Aşağıdaki URL'yi (bağlantıyı) yapıştırın ve Enter tuşuna basın.</li>
+        <li>Stremio'yu açın → Eklentiler (Add-ons)</b> tıklayın.</li>
+        <li>Add addon kısmına tıklayın.</b> icon</li>
+        <li>Aşağıdaki bağlantıyı yapıştırın ve Enter tuşuna basın.</li>
       </ol>
     </div>
 
