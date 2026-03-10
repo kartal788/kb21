@@ -151,7 +151,7 @@ async def handle_payment_screenshot(client: Client, message: Message):
             await message.reply_text(
                 "✅ <b>Dekont Alındı</b>\n\n"
                 "Ödeme ekran görüntünüz incelenmek üzere yöneticiye iletildi.\n"
-                "Onaylandığında size bildirim gönderilecektir. Teşekkür ederiz",
+                "Onaylandığında size bildirim gönderilecektir. Teşekkür ederiz.",
                 quote=True
             )
         else:
