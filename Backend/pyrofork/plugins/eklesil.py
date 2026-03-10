@@ -2,7 +2,13 @@ import os
 import re
 import aiohttp
 from datetime import timezone, datetime
-from dateutil.parser import parse as parse_date
+try:
+    from dateutil.parser import parse as parse_date
+except ImportError:
+    # Eğer kütüphane yüklenmezse botun çökmemesi için basit bir alternatif
+    def parse_date(date_str):
+        from datetime import datetime
+        return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
 
 from pyrogram import Client, filters
 from pyrogram.types import Message
