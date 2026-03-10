@@ -11,6 +11,7 @@ import os
 
 # ---------------- CONFIG ----------------
 OWNER_ID = int(os.getenv("OWNER_ID", 12345))
+stop_event = asyncio.Event()
 DOWNLOAD_DIR = "/"
 
 # ---------------- DATABASE ----------------
@@ -57,6 +58,17 @@ def format_time_custom(total_seconds):
     h, rem = divmod(total_seconds, 3600)
     m, s = divmod(rem, 60)
     return f"{h}s{m}d{s:02}s"
+
+async def handle_stop(callback_query: CallbackQuery):
+    stop_event.set()
+    try:
+        await callback_query.message.edit_text(
+            "⛔ İşlem **iptal edildi**!",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+        await callback_query.answer("Durdurma talimatı alındı.")
+    except:
+        pass
 
 # ---------------- GLOBAL FLAGS ----------------
 is_running = False
@@ -154,6 +166,9 @@ async def cevir(client: Client, message: Message):
             idx = 0
 
             while idx < len(ids):
+                if not is_running: # Eğer kullanıcı /durdur dediyse döngüden çık
+                    await start_msg.edit_text("⛔ İşlem kullanıcı tarafından durduruldu.")
+                    return # İşlemi sonlandır
                     
                 batch_ids = ids[idx: idx + batch_size]
                 batch_docs = list(col.find({"_id": {"$in": batch_ids}}))
@@ -210,6 +225,7 @@ async def cevir(client: Client, message: Message):
                                 f"Süre: `{elapsed_str}` (`{eta_str}`)\n\n"
                                 f"┟ CPU → {cpu}%\n"
                                 f"┖ RAM → {ram}%\n\n"
+                                f"🛑 İşlemi durdurmak için: /durdur" # Yeni eklenen satır
                             ),
                             parse_mode=enums.ParseMode.MARKDOWN,
                         )
@@ -668,3 +684,15 @@ async def linklerisil(client: Client, message: Message):
             total_docs += 1
 
     await status.edit_text(f"✅ İşlem tamamlandı\n\n📄 Etkilenen kayıt: {total_docs}\n🗑️ Silinen tekrar: {total_removed}")
+
+@Client.on_message(filters.command("durdur") & filters.private & filters.user(OWNER_ID))
+async def durdur_komutu(client: Client, message: Message):
+    global is_running
+    if is_running:
+        is_running = False
+        await message.reply_text("⛔ İşlem durduruluyor... Lütfen bekleyin.")
+    else:
+        await message.reply_text("⚠️ Şu an çalışan bir işlem yok.")
+
+
+
