@@ -225,7 +225,7 @@ async def cevir(client: Client, message: Message):
                                 f"Süre: `{elapsed_str}` (`{eta_str}`)\n\n"
                                 f"┟ CPU → {cpu}%\n"
                                 f"┖ RAM → {ram}%\n\n"
-                                f" /durdur İşlemi durdur." # Yeni eklenen satır
+                                f"🛑 İşlemi durdurmak için: /durdur" # Yeni eklenen satır
                             ),
                             parse_mode=enums.ParseMode.MARKDOWN,
                         )
