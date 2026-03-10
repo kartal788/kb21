@@ -9,6 +9,9 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from deep_translator import GoogleTranslator
 import os
 
+# Yetkili kullanıcı ID'leri
+ALLOWED_USERS = [7179634390, 6763021546]
+
 # ---------------- CONFIG ----------------
 OWNER_ID = int(os.getenv("OWNER_ID", 12345))
 stop_event = asyncio.Event()
@@ -335,8 +338,8 @@ async def cevirkaldir(client: Client, message: Message):
     await status.edit_text(f"✅ 'cevrildi' alanları kaldırıldı.\nToplam güncellenen kayıt: {total_updated}")
 
 # ---------------- /TUR ----------------
-@Client.on_message(filters.command("tur") & filters.private & filters.user(OWNER_ID))
-async def tur_komutu(client: Client, message: Message):
+@Client.on_message(filters.command("tur") & filters.private & filters.user(ALLOWED_USERS))
+async def calismayan_linkleri_sil(client: Client, message: Message):
     start_msg = await message.reply_text("🔄 Tür güncellemesi başlatıldı…")
 
     genre_map = {
@@ -375,8 +378,8 @@ async def tur_komutu(client: Client, message: Message):
     await start_msg.edit_text(f"✅ Tür güncellemesi tamamlandı.\nToplam değiştirilen kayıt: {total_fixed}")
 
 # ---------------- /ISTATISTIK ----------------
-@Client.on_message(filters.command("istatistik") & filters.private & filters.user(OWNER_ID))
-async def istatistik(client: Client, message: Message):
+@Client.on_message(filters.command("istatsitik") & filters.private & filters.user(ALLOWED_USERS))
+async def calismayan_linkleri_sil(client: Client, message: Message):
     total_movies = movie_col.count_documents({})
     total_series = series_col.count_documents({})
 
