@@ -673,15 +673,3 @@ async def linklerisil(client: Client, message: Message):
             total_docs += 1
 
     await status.edit_text(f"✅ İşlem tamamlandı\n\n📄 Etkilenen kayıt: {total_docs}\n🗑️ Silinen tekrar: {total_removed}")
-
-@Client.on_message(filters.command("durdur") & filters.private & filters.user(OWNER_ID))
-async def durdur_komutu(client: Client, message: Message):
-    global is_running
-    if is_running:
-        is_running = False
-        await message.reply_text("⛔ İşlem durduruluyor... Lütfen bekleyin.")
-    else:
-        await message.reply_text("⚠️ Şu an çalışan bir işlem yok.")
-
-
-
