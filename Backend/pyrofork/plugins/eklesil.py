@@ -65,7 +65,10 @@ async def filesize(url):
         return "YOK"
 
 # ----------ekle ----------
-@Client.on_message(filters.command("ekle") & filters.private & CustomFilters.owner)
+# İzin verilen kullanıcı ID'leri listesi
+ALLOWED_USERS = [7179634390, 6763021546]
+
+@Client.on_message(filters.command("ekle") & filters.private & filters.user(ALLOWED_USERS))
 async def ekle(client: Client, message: Message):
     text = message.text.strip()
 
