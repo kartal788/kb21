@@ -260,10 +260,10 @@ async def configure_addon(token: str):
                         expiry_str = expiry.strftime("%d %b %Y").lstrip("0")
                     if sub_status == "active":
                         status_color = "#22c55e"
-                        status_text = "✅ Active"
+                        status_text = "✅ Aktif"
                     else:
                         status_color = "#ef4444"
-                        status_text = "🔴 Expired"
+                        status_text = "🔴 Süresi dolmuş"
             except Exception:
                 pass
 
