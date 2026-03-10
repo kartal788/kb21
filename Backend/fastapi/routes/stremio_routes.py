@@ -508,38 +508,15 @@ async def get_streams(
     id: str,
     token_data: dict = Depends(verify_token)
 ):
-
+    # Abonelik ve limit kontrolleri (Burada mevcut kodunuz kalabilir)
     if token_data.get("subscription_expired"):
         from Backend.config import Telegram as _TG
-        return {
-            "streams": [
-                {
-                    "name": "🚫 Subscription Expired",
-                    "title": "Your subscription has expired.\nRenew via the bot to continue watching.",
-                    "url": _TG.SUBSCRIPTION_URL
-                }
-            ]
-        }
+        return {"streams": [{"name": "🚫 Subscription Expired", "title": "Abonelik süresi doldu.", "url": _TG.SUBSCRIPTION_URL}]}
 
     if token_data.get("limit_exceeded"):
         limit_type = token_data["limit_exceeded"]
-
-        title = (
-            "🚫 Daily Limit Reached – Upgrade Required"
-            if limit_type == "daily"
-            else "🚫 Monthly Limit Reached – Upgrade Required"
-        )
-
-        return {
-            "streams": [
-                {
-                    "name": "Limit Reached",
-                    "title": title,
-                    "url": token_data["limit_video"]
-                }
-            ]
-        }
-
+        title = "🚫 Limit Reached – Upgrade Required"
+        return {"streams": [{"name": "Limit Reached", "title": title, "url": token_data["limit_video"]}]}
 
     try:
         parts = id.split(":")
@@ -555,12 +532,12 @@ async def get_streams(
         episode_number=episode_num
     )
 
-
     if not media_details or "telegram" not in media_details:
         return {"streams": []}
 
     streams = []
-    # Döngüyü doğru girintiyle başlatın
+    
+    # 1. Döngü Bloğu (4 boşluk girinti)
     for quality in media_details.get("telegram", []):
         file_id = quality.get("id")
         if not file_id:
@@ -586,7 +563,7 @@ async def get_streams(
             "url": url
         })
 
-# Bu işlemlerin tamamı fonksiyonun içinde olmalıdır (girintiyi dikkatle ayarlayın)
+    # 2. Sıralama ve Düzenleme Bloğu (Aynı hizada, for ile paralel)
     streams.sort(
         key=lambda s: get_resolution_priority(s.get("name", "")),
         reverse=True
@@ -602,5 +579,5 @@ async def get_streams(
             seen[s["name"]] = seen.get(s["name"], 0) + 1
             s["name"] = f"{s['name']} ({seen[s['name']]})"
 
-    # return ifadesi artık fonksiyonun içinde olduğu için hata çözülecektir
+    # 3. Return (En dıştaki fonksiyon hızıyla aynı olmalı)
     return {"streams": streams}
