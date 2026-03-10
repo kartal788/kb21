@@ -178,10 +178,10 @@ async def get_manifest(token: str, token_data: dict = Depends(verify_token)):
                     expiry_obj = user.get("subscription_expiry")
                     if expiry_obj:
                         expiry_str = expiry_obj.strftime("%d %b %Y").lstrip("0")
-                        addon_name = f"{ADDON_NAME} — Expires {expiry_str}"
+                        addon_name = f"{ADDON_NAME} — Bitiş Tarihi {expiry_str}"
                         addon_desc = (
-                            f"📅 Subscription active until {expiry_str}.\n"
-                            f"Streams movies and series from your Telegram."
+                            f"📅 Aboneliğiniz {expiry_str} \n"
+                            f"tarihinde bitecektir."
                         )
                         # Encode expiry epoch (low 16 bits, hex) into version so
                         # Stremio detects a change when subscription is updated.
@@ -189,7 +189,7 @@ async def get_manifest(token: str, token_data: dict = Depends(verify_token)):
                         addon_version = f"{ADDON_VERSION}-{epoch_tag}"
                     else:
                         addon_name = f"{ADDON_NAME} — Active"
-                        addon_desc = "✅ Subscription active.\nStreams movies and series from your Telegram."
+                        addon_desc = "✅ Aboneliğiniz aktif.\n Film ve dizi izleyebilirsiniz."
             except Exception:
                 pass  # Fallback to defaults on error
 
