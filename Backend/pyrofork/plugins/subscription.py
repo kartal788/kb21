@@ -44,10 +44,10 @@ async def plan_selection(client: Client, callback_query: CallbackQuery):
 
     text = (
         f"<b>✅ Seçilen Plan: {plan['days']} Gün</b>\n\n"
-        f"<b>💰 Fiyat:</b> {plan['price']}TL\n"
+        f"<b>💰 Fiyat:</b> {plan['price']} TL\n"
         f"<b>📅Son Kullanma Tarihi (şimdi onaylanırsa):</b> {expiry_str}\n\n"
         f"<b>📋 Ödeme Talimatları:</b>\n"
-        f"1. Yöneticiye {plan['price']}TL ödeme yapın.\n"
+        f"1. Yöneticiye {plan['price']} TL ödeme yapın.\n"
         f"2. <b>Ödeme dekontunuzu doğrudan buraya (bu sohbete) gönderin</b>.\n"
         f"   Yönetici ödemeyi inceleyecek ve aboneliğinizi aktif edecektir."
     )
@@ -130,7 +130,7 @@ async def handle_payment_screenshot(client: Client, message: Message):
             f"<b>🔗 Kullanıcı Adı:</b> {username_str}\n\n"
             f"<b>📦 Plan Detayları:</b>\n"
             f"  • Süre: <b>{duration} gün</b>\n"
-            f"  • Fiyat: <b>{price}TL</b>\n\n"
+            f"  • Fiyat: <b>{price} TL</b>\n\n"
             f"Lütfen yukarıdaki dekontu inceleyin ve onaylayın veya reddedin."
         )
 
