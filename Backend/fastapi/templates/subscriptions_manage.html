@@ -72,7 +72,7 @@
                     <tbody id="subscribers-tbody" class="divide-y divide-gray-100 dark:divide-gray-800">
                         <tr>
                             <td colspan="4" class="px-6 py-8 text-center text-gray-500"><i
-                                    class="fas fa-spinner fa-spin mr-2"></i> Loading...</td>
+                                    class="fas fa-spinner fa-spin mr-2"></i> Yükleniyor.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -84,10 +84,10 @@
             <span id="sub-page-info"></span>
             <div class="flex gap-2">
                 <button id="sub-btn-prev" onclick="subChangePage(-1)"
-                    class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition">‹ Prev</button>
+                    class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition">‹ Önceki</button>
                 <span id="sub-page-num" class="px-3 py-1 font-semibold"></span>
                 <button id="sub-btn-next" onclick="subChangePage(1)"
-                    class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition">Next ›</button>
+                    class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition">Sonraki ›</button>
             </div>
         </div>
     </div>
@@ -97,29 +97,27 @@
 <div id="plan-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border shadow-lg rounded-md theme-card sm:w-11/12 md:max-w-md">
         <div class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-2" id="plan-modal-title">Add New
-                Plan</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-2" id="plan-modal-title">Yeni plan ekle</h3>
             <div class="mt-2 text-left">
                 <form id="plan-form" onsubmit="submitPlanForm(event)">
                     <input type="hidden" id="plan-id">
                     <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Duration
-                            (Days)</label>
+                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Gün</label>
                         <input type="number" id="plan-days"
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
                             required min="1">
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Price (₹)</label>
+                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Fiyat (TL)</label>
                         <input type="number" id="plan-price"
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
                             required min="0" step="0.01">
                     </div>
                     <div class="flex justify-end gap-2 mt-6">
                         <button type="button" onclick="closePlanModal()"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow">Cancel</button>
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow">İptal et</button>
                         <button type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">Save Plan</button>
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">Kaydet</button>
                     </div>
                 </form>
             </div>
@@ -147,9 +145,9 @@
                     </div>
                     <div class="flex justify-end gap-2 mt-6">
                         <button type="button" onclick="closeUserModal()"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow">Cancel</button>
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow">İptal et.</button>
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-                            id="btn-user-save">Confirm</button>
+                            id="btn-user-save">Onayla</button>
                     </div>
                 </form>
             </div>
@@ -273,11 +271,11 @@
         <td class="px-6 py-4 text-right">
           <div class="flex justify-end gap-2 flex-wrap">
             <button onclick="openUserModal(${u._id}, '${safeName}', 'extend')"
-              class="bg-green-50 text-green-600 hover:bg-green-100 px-2 py-1 rounded text-xs font-medium border border-green-200">Extend</button>
+              class="bg-green-50 text-green-600 hover:bg-green-100 px-2 py-1 rounded text-xs font-medium border border-green-200">Uzat</button>
             <button onclick="openUserModal(${u._id}, '${safeName}', 'reduce')"
-              class="bg-yellow-50 text-yellow-600 hover:bg-yellow-100 px-2 py-1 rounded text-xs font-medium border border-yellow-200">Reduce</button>
+              class="bg-yellow-50 text-yellow-600 hover:bg-yellow-100 px-2 py-1 rounded text-xs font-medium border border-yellow-200">Kısalt</button>
             <button onclick="openUserModal(${u._id}, '${safeName}', 'delete')"
-              class="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-xs font-medium border border-red-200">Revoke</button>
+              class="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-xs font-medium border border-red-200">Geri Çek</button>
           </div>
         </td>
       </tr>`;
