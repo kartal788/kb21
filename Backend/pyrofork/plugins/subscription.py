@@ -217,7 +217,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
             # Build confirmation message for user
             success_text = (
                 f"🎉 <b>Ödemeniz Onaylandı</b>\n\n"
-                f"Aboneliğiniz <b>{expiry_str} tarihine kadar aktif edildi.</b>."
+                f"Aboneliğiniz <b>{expiry_str} tarihine kadar aktif edildi</b>."
                 f"{invite_text}"
             )
             if addon_url:
