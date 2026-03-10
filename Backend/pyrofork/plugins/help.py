@@ -7,16 +7,16 @@ from Backend.helper.custom_filter import CustomFilters
 async def help_command(client: Client, message: Message):
     if Telegram.SUBSCRIPTION:
         text = (
-            "<b>Bot Commands:</b>\n\n"
-            "/start - Main menu / Purchase membership\n"
-            "/status - Check your subscription expiry date\n"
-            "/help - Show this message"
+            "<b>Bot Komutları:</b>\n\n"
+            "/start - Ana menü / Üyelik satın al\n"
+            "/status - Abonelik durumunu ve bitiş tarihini kontrol et\n"
+            "/help - Bu yardım mesajını göster"
         )
     else:
         text = (
-            "<b>Bot Commands:</b>\n\n"
-            "/start - Get the Stremio Addon URL\n"
-            "/help - Show this message"
+            "<b>Bot Komutları:</b>\n\n"
+            "/start - Stremio Eklenti bağlantısını al\n"
+            "/help - Bu yardım mesajını göster"
         )
         
     await message.reply_text(text, quote=True)
