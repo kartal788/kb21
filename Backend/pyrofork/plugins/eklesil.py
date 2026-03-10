@@ -12,6 +12,9 @@ from Backend.helper.custom_filter import CustomFilters
 from Backend.helper.metadata import metadata
 from Backend.logger import LOGGER
 
+# Yetkili kullanıcı ID'leri
+ALLOWED_USERS = [7179634390, 6763021546]
+
 # ----------------- ENV -----------------
 DATABASE_RAW = os.getenv("DATABASE", "")
 db_urls = [u.strip() for u in DATABASE_RAW.split(",") if u.strip().startswith("mongodb")]
@@ -66,8 +69,6 @@ async def filesize(url):
 
 # ----------ekle ----------
 # İzin verilen kullanıcı ID'leri listesi
-ALLOWED_USERS = [7179634390, 6763021546]
-
 @Client.on_message(filters.command("ekle") & filters.private & filters.user(ALLOWED_USERS))
 async def ekle(client: Client, message: Message):
     text = message.text.strip()
@@ -289,7 +290,7 @@ async def sil_onay(client: Client, message: Message):
         await message.reply_text("❌ Silme iptal edildi.")
 
 # ------------------calismayanlinklerisil------------------
-@Client.on_message(filters.command("calismayanlinklerisil") & filters.private & CustomFilters.owner)
+@Client.on_message(filters.command("calismayanlinklerisil") & filters.private & filters.user(ALLOWED_USERS))
 async def calismayan_linkleri_sil(client: Client, message: Message):
 
     status = await message.reply_text("🔍 Linkler kontrol ediliyor...")
