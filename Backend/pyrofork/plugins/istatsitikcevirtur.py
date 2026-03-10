@@ -224,7 +224,8 @@ async def cevir(client: Client, message: Message):
                                 f"{progress_bar(translated_movies + translated_episodes, total_to_translate)}\n\n"
                                 f"Süre: `{elapsed_str}` (`{eta_str}`)\n\n"
                                 f"┟ CPU → {cpu}%\n"
-                                f"┖ RAM → {ram}%"
+                                f"┖ RAM → {ram}%\n\n"
+                                f" /durdur İşlemi durdur." # Yeni eklenen satır
                             ),
                             parse_mode=enums.ParseMode.MARKDOWN,
                         )
