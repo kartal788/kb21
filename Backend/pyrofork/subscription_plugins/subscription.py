@@ -5,106 +5,100 @@ from Backend import db
 from datetime import datetime, timedelta
 import asyncio
 
+from bson.objectid import ObjectId
+
 @Client.on_callback_query(filters.regex(r"^plan_([a-fA-F0-9]{24})$"))
 async def plan_selection(client: Client, callback_query: CallbackQuery):
     if not Telegram.SUBSCRIPTION:
-        return await callback_query.answer("Abonelikler aktif değil.", show_alert=True)
+        return await callback_query.answer("Subscriptions are not enabled.", show_alert=True)
         
     plan_id = callback_query.matches[0].group(1)
+    
     plans = await db.get_subscription_plans()
     plan = next((p for p in plans if p["_id"] == plan_id), None)
     
     if not plan:
-        return await callback_query.answer("Geçersiz plan.", show_alert=True)
+        return await callback_query.answer("Invalid plan.", show_alert=True)
         
-    user_id = callback_query.from_user.id
     duration = plan["days"]
-    price = plan["price"]
+    await callback_query.answer()
+    
+    user_id = callback_query.from_user.id if callback_query.from_user else callback_query.message.chat.id
+    first_name = callback_query.from_user.first_name if callback_query.from_user else callback_query.message.chat.title
+    username = callback_query.from_user.username if callback_query.from_user else callback_query.message.chat.username
 
-    # Yöneticiye gidecek mesaj
-    admin_text = (
-        f"<b>🔔 Yeni Abonelik Talebi!</b>\n\n"
-        f"<b>👤 Kullanıcı:</b> {callback_query.from_user.mention}\n"
-        f"<b>🆔 ID:</b> <code>{user_id}</code>\n"
-        f"<b>📦 Plan:</b> {duration} Gün - {price} TL"
+    # Store initial user interaction if needed
+    await db.update_user_interaction(user_id, first_name, username)
+
+    # Calculate expiry
+    user = await db.get_user(user_id)
+    now = datetime.utcnow()
+    current_expiry = user.get("subscription_expiry") if user else None
+
+    if current_expiry and current_expiry > now:
+        new_expiry = current_expiry + timedelta(days=int(duration))
+    else:
+        new_expiry = now + timedelta(days=int(duration))
+
+    expiry_str = new_expiry.strftime("%Y-%m-%d %H:%M UTC")
+
+    text = (
+        f"<b>✅ Plan Seçildi: {plan['days']} Gün</b>\n\n"
+        f"<b>💰 Ödeme:</b> {plan['price']} TL\n"
+        f"<b>📅 Son Kullanma Tarihi (şimdi onaylanırsa):</b> {expiry_str}\n\n"
+        f"<b>📋 Ödeme Talimatları:</b>\n"
+        f"1. Yöneticiye {plan['price']} TL ödeme yapın.\n"
+        f"2. <b>Ödeme dekontunuzun ekran görüntüsünü doğrudan buraya (bu sohbete) gönderin</b>.\n"
+        f"   Yönetici ödemeyi inceleyecek ve aboneliğinizi aktif edecektir."
     )
 
+    # Set pending payment state (price stored for admin display)
+    await db.set_pending_payment(user_id, int(duration), 0, price=plan.get("price", 0))
+
+    # Add cancel button
     keyboard = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("✅ Onayla", callback_data=f"approve_{user_id}"),
-            InlineKeyboardButton("❌ Reddet",  callback_data=f"reject_{user_id}")
-        ]
+        [InlineKeyboardButton("❌ iptal et", callback_data="cancel_payment")]
     ])
 
-    approver_ids = Telegram.APPROVER_IDS if Telegram.APPROVER_IDS else [Telegram.OWNER_ID]
-    admin_messages = []
-    
-    for app_id in approver_ids:
-        try:
-            sent = await client.send_message(app_id, admin_text, reply_markup=keyboard)
-            admin_messages.append({"chat_id": app_id, "message_id": sent.id})
-        except Exception:
-            pass
+    dm_sent = False
+    try:
+        msg = await client.send_message(
+            chat_id=user_id,
+            text=text,
+            reply_markup=keyboard,
+        )
+        dm_sent = True
+        
+        async def delete_msg(message):
+            await asyncio.sleep(120)
+            try:
+                await message.delete()
+            except Exception:
+                pass
+        
+        asyncio.create_task(delete_msg(msg))
+    except Exception as e:
+        print(f"Kullanıcıya DM gönderilemedi {user_id}: {e}")
 
-    # Veritabanına "bekliyor" olarak kaydet (Fotoğraf ID: 0)
-    await db.set_pending_payment(user_id, int(duration), 0, price=price, admin_messages=admin_messages)
-
-    # Kullanıcıya bilgi ver
-    await callback_query.message.edit_text(
-        "✅ <b>Talebiniz yöneticiye iletildi.</b>\n\n"
-        "Onaylandığında size bilgi verilecektir. Lütfen bekleyin."
-    )
-
-@Client.on_callback_query(filters.regex(r"^(approve|reject)_(\d+)$"))
-async def admin_review(client: Client, callback_query: CallbackQuery):
-    approver_ids = Telegram.APPROVER_IDS if Telegram.APPROVER_IDS else [Telegram.OWNER_ID]
-    if callback_query.from_user.id not in approver_ids:
-        return await callback_query.answer("Yetkiniz yok.", show_alert=True)
-
-    action = callback_query.matches[0].group(1)
-    target_user_id = int(callback_query.matches[0].group(2))
-    admin_name = callback_query.from_user.first_name
-
-    user_pre = await db.get_user(target_user_id)
-    if not user_pre or "pending_payment" not in user_pre:
-        return await callback_query.answer("Bu talep zaten işlenmiş.", show_alert=True)
-
-    admin_messages = user_pre["pending_payment"].get("admin_messages", [])
-    duration = user_pre["pending_payment"].get("duration", "?")
-    price = user_pre["pending_payment"].get("price", "?")
-
-    if action == "approve":
-        user_data = await db.approve_payment(target_user_id)
-        if user_data:
-            # Token ve Link oluşturma (mevcut mantık)
-            token_doc = await db.add_api_token(name=str(target_user_id), user_id=target_user_id)
-            addon_url = f"{Telegram.BASE_URL}/stremio/{token_doc.get('token')}/manifest.json"
-            
-            await client.send_message(
-                target_user_id, 
-                f"🎉 <b>Aboneliğiniz Onaylandı!</b>\n\n"
-                f"Süre: {duration} Gün\n"
-                f"Eklenti Linkiniz: <code>{addon_url}</code>"
-            )
-            status_text = f"✅ <b>{admin_name} onayladı.</b>\n\nID: {target_user_id}\nPlan: {duration} Gün"
-        else:
-            return await callback_query.answer("Hata oluştu.")
-
-    else: # reject
-        await db.reject_payment(target_user_id)
-        await client.send_message(target_user_id, "❌ Abonelik talebiniz reddedildi.")
-        status_text = f"❌ <b>{admin_name} reddetti.</b>\n\nID: {target_user_id}"
-
-    # TÜM ADMİNLERDEKİ MESAJLARI GÜNCELLE (edit_text kullanarak)
-    for am in admin_messages:
-        try:
-            await client.edit_message_text(
-                chat_id=am["chat_id"],
-                message_id=am["message_id"],
-                text=status_text
-            )
-        except Exception:
-            pass
+    if dm_sent:
+        await callback_query.answer("✅ Ödeme talimatları için özel mesaj kutunuzu kontrol edin", show_alert=True)
+    else:
+        # Fallback: reply in current chat if DM fails (user hasn't started bot)
+        fallback_msg = await callback_query.message.reply_text(
+            text + "\n\n⚠️ <i>Lütfen önce botun kullanıcı adına tıklayarak botu başlatın (Start), ardından dekontunuzu buradan gönderin.</i>",
+            reply_markup=keyboard,
+            quote=True,
+        )
+        await callback_query.answer()
+        
+        async def delete_msg(message):
+            await asyncio.sleep(120)
+            try:
+                await message.delete()
+            except Exception:
+                pass
+        
+        asyncio.create_task(delete_msg(fallback_msg))
 
 @Client.on_callback_query(filters.regex(r"^cancel_payment$"))
 async def cancel_payment_handler(client: Client, callback_query: CallbackQuery):
@@ -118,6 +112,93 @@ async def cancel_payment_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.message.delete()
     except Exception:
         pass
+
+
+@Client.on_message(filters.photo & filters.private)
+async def handle_payment_screenshot(client: Client, message: Message):
+    if not Telegram.SUBSCRIPTION:
+        return
+    
+    # Safely resolve sender ID
+    sender_id = (message.from_user.id if message.from_user else None) \
+             or (message.sender_chat.id if message.sender_chat else None) \
+             or message.chat.id
+
+    try:
+        print(f"DEBUG: handle_payment_screenshot triggered by {sender_id}")
+        # Check if user has a pending payment request
+        user = await db.get_user(sender_id)
+        print(f"DEBUG: user from DB = {user}")
+        if not user or "pending_payment" not in user:
+            # No active payment flow - tell the user what to do
+            print(f"DEBUG: No pending_payment found for {sender_id}")
+            await message.reply_text(
+                "ℹ️ Fotoğrafınız bize ulaştı, ancak sistemde aktif bir ödeme talebiniz görünmüyor.\n\n"
+                "Lütfen önce /start komutu ile bir abonelik planı seçin, ardından ödeme dekontunuzu gönderin.",
+                quote=True
+            )
+            return
+
+        pending = user["pending_payment"]
+        duration = pending.get("duration", "?")
+        price    = pending.get("price", "?")
+
+        # --- Admin notification ---
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("✅ Onayla", callback_data=f"approve_{sender_id}"),
+                InlineKeyboardButton("❌ Reddet",  callback_data=f"reject_{sender_id}")
+            ]
+        ])
+
+        user_mention = message.from_user.mention if message.from_user else f"User {sender_id}"
+        username_str = f"@{message.from_user.username}" if (message.from_user and message.from_user.username) else "N/A"
+
+        admin_text = (
+            f"<b>💰 Yeni Ödeme Ekran Görüntüsü Alındı</b>\n\n"
+            f"<b>👤 Kullanıcı:</b> {user_mention}\n"
+            f"<b>🆔 Kullanıcı ID:</b> <code>{sender_id}</code>\n"
+            f"<b>🔗 Kullanıcı Adı:</b> {username_str}\n\n"
+            f"<b>📦 Plan Detayları:</b>\n"
+            f"  • Süre: <b>{duration} gün</b>\n"
+            f"  • Fiyat: <b>{price} TL</b>\n\n"
+            f"Lütfen yukarıdaki ekran görüntüsünü inceleyin ve onaylayın veya reddedin.."
+        )
+
+        approver_ids = Telegram.APPROVER_IDS if Telegram.APPROVER_IDS else [Telegram.OWNER_ID]
+        admin_messages = []
+        for approver_id in approver_ids:
+            try:
+                sent = await message.copy(approver_id, caption=admin_text, reply_markup=keyboard)
+                admin_messages.append({"chat_id": approver_id, "message_id": sent.id})
+            except Exception as e:
+                print(f"Failed to forward screenshot to approver {approver_id}: {e}")
+
+        # Update pending state with screenshot message ID + all admin message IDs
+        await db.set_pending_payment(sender_id, duration, message.id, price=price,
+                                     admin_messages=admin_messages)
+
+        if admin_messages:
+            await message.reply_text(
+                "✅ <b>Ekran Görüntüsü Alındı!</b>\n\n"
+                "Ödeme dekontunuz incelenmek üzere yöneticiye iletildi.\n"
+                "Onaylandığında size bildirim gönderilecektir. Teşekkür ederiz.",
+                quote=True
+            )
+        else:
+            await message.reply_text(
+                "⚠️ Ekran görüntünüz alındı ancak şu anda yöneticiye ulaşılamıyor. "
+                "Lütfen doğrudan yönetici ile iletişime geçiniz.",
+                quote=True
+            )
+
+    except Exception as e:
+        print(f"Error in handle_payment_screenshot: {e}")
+        await message.reply_text(
+            f"⚠️ Ekran görüntünüz işlenirken bir hata oluştu. Lütfen tekrar deneyin veya yöneticiye başvurun.\n\nError: {e}",
+            quote=True
+        )
+
 
 @Client.on_callback_query(filters.regex(r"^(approve|reject)_(\d+)$"))
 async def admin_review(client: Client, callback_query: CallbackQuery):
@@ -200,7 +281,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
 
             # Update acting admin's message
             status_caption = f"✅ <b>{admin_name} tarafından onaylandı</b>\n\n{info_text}"
-            await callback_query.message.edit_text(status_caption)
+            await callback_query.message.edit_caption(status_caption)
 
             # Update all OTHER admins' copies
             acting_msg_id = callback_query.message.id
@@ -255,7 +336,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
                 if am["message_id"] == acting_msg_id:
                     continue
                 try:
-                    await client.edit_message_text(
+                    await client.edit_message_caption(
                         chat_id=am["chat_id"],
                         message_id=am["message_id"],
                         caption=status_caption
