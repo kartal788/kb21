@@ -9,7 +9,57 @@ from bson.objectid import ObjectId
 
 @Client.on_callback_query(filters.regex(r"^plan_([a-fA-F0-9]{24})$"))
 async def plan_selection(client: Client, callback_query: CallbackQuery):
-    # ... (Plan çekme ve user_id belirleme kısımları aynı kalıyor) ...
+    if not Telegram.SUBSCRIPTION:
+        return await callback_query.answer("Abonelikler aktif değil.", show_alert=True)
+        
+    plan_id = callback_query.matches[0].group(1)
+    plans = await db.get_subscription_plans()
+    plan = next((p for p in plans if p["_id"] == plan_id), None)
+    
+    if not plan:
+        return await callback_query.answer("Geçersiz plan.", show_alert=True)
+        
+    user_id = callback_query.from_user.id
+    duration = plan["days"]
+    price = plan["price"]
+
+    # Yönetici Metni
+    admin_text = (
+        f"<b>🔔 Yeni Abonelik Talebi!</b>\n\n"
+        f"<b>👤 Kullanıcı:</b> {callback_query.from_user.mention}\n"
+        f"<b>🆔 ID:</b> <code>{user_id}</code>\n"
+        f"<b>📦 Plan:</b> {duration} Gün - {price} TL"
+    )
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Onayla", callback_data=f"approve_{user_id}"),
+         InlineKeyboardButton("❌ Reddet",  callback_data=f"reject_{user_id}")]
+    ])
+
+    approver_ids = Telegram.APPROVER_IDS if Telegram.APPROVER_IDS else [Telegram.OWNER_ID]
+    admin_messages = []
+    for app_id in approver_ids:
+        try:
+            sent = await client.send_message(app_id, admin_text, reply_markup=keyboard)
+            admin_messages.append({"chat_id": app_id, "message_id": sent.id})
+        except: pass
+
+    await db.set_pending_payment(user_id, int(duration), 0, price=price, admin_messages=admin_messages)
+    await callback_query.message.edit_text("✅ Talebiniz yöneticiye iletildi. Lütfen onay bekleyin.")
+
+# admin_review içindeki düzeltme (Onay Kısmı):
+# ... status_caption oluşturulduktan sonra ...
+await callback_query.message.edit_text(status_caption) # edit_caption yerine edit_text
+
+for am in admin_messages:
+    if am["message_id"] == acting_msg_id: continue
+    try:
+        await client.edit_message_text( # edit_message_caption yerine edit_message_text
+            chat_id=am["chat_id"],
+            message_id=am["message_id"],
+            text=status_caption
+        )
+    except: pass
 
     # YENİ MANTIK: Kullanıcıya fotoğraf gönder demeyecek, yöneticiye talep gönderecek
     admin_text = (
@@ -131,7 +181,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
 
             # Update acting admin's message
             status_caption = f"✅ <b>{admin_name} tarafından onaylandı</b>\n\n{info_text}"
-            await callback_query.message.edit_caption(status_caption)
+            await callback_query.message.edit_text(status_caption)
 
             # Update all OTHER admins' copies
             acting_msg_id = callback_query.message.id
@@ -186,7 +236,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
                 if am["message_id"] == acting_msg_id:
                     continue
                 try:
-                    await client.edit_message_caption(
+                    await client.edit_message_text(
                         chat_id=am["chat_id"],
                         message_id=am["message_id"],
                         caption=status_caption
