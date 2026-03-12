@@ -272,7 +272,7 @@
             const plans = data.plans || data || [];
             const sel = document.getElementById('assign-plan-select');
             sel.innerHTML = '<option value="">— Select a plan —</option>' +
-                plans.map(p => `<option value="${p.days}">${p.days} days${p.price ? ' — ₹' + p.price : ''}</option>`).join('');
+                plans.map(p => `<option value="${p.days}">${p.days} days${p.price ? ' — TL' + p.price : ''}</option>`).join('');
         } catch (e) { console.warn('Could not load plans', e); }
     }
 
