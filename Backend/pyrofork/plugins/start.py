@@ -70,7 +70,7 @@ async def send_start_message(client: Client, message: Message):
             
             return await message.reply_text(
                 '<bTelegram Stremio Özel Grubuna Hoş Geldiniz</b>\n\n'
-                'Bu bota ve Stremio eklentisine erişmek için aktif bir abonelik gereklidir.\n'
+                'Stremio eklentisine erişmek için aktif bir abonelik gereklidir.\n'
                 'Devam etmek için lütfen aşağıdan bir abonelik planı seçin:',
                 reply_markup=keyboard,
                 quote=True,
