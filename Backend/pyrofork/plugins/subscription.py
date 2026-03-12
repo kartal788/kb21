@@ -292,7 +292,7 @@ async def admin_review(client: Client, callback_query: CallbackQuery):
                 f"👤 <b>Kullanıcı:</b> {user_mention}\n"
                 f"🆔 <b>Kullanıcı ID:</b> <code>{target_user_id}</code>\n"
                 f"🔗 <b>Kullanıcı Adı:</b> {username_str}\n\n"
-                f"📦 <b>Plan:</b> {duration} gün (₹{price})"
+                f"📦 <b>Plan:</b> {duration} gün ({price} TL)"
             )
 
             # Update acting admin's message
