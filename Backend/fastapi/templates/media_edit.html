@@ -130,31 +130,13 @@
     {% endif %}
 
     <!-- Edit Form -->
-<div class="theme-card p-4 sm:p-6 rounded-lg shadow mb-6 sm:mb-8">
-    <h3 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Edit Details</h3>
-    <form onsubmit="updateMedia(event)" id="edit-form">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
-            
-            <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">TMDB ID *</label>
-                    <input type="number" id="tmdb_id_input" name="tmdb_id"
-                        value="{{ tmdb_id }}"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
-                        required>
-                    <p class="text-xs text-gray-500 mt-1">Dikkat: Bu ID'yi değiştirmek bağlantılı verileri etkileyebilir.</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">IMDB ID</label>
-                    <input type="text" id="imdb_id" name="imdb_id"
-                        value="{{ media_details.imdb_id if media_details.imdb_id else '' }}"
-                        placeholder="tt1234567"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                </div>
-            </div>
-            <div class="sm:col-span-2">
-                <label class="block text-sm font-medium mb-2">Title *</label>
-                <input type="text" id="title" name="title"
+    <div class="theme-card p-4 sm:p-6 rounded-lg shadow mb-6 sm:mb-8">
+        <h3 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Edit Details</h3>
+        <form onsubmit="updateMedia(event)" id="edit-form">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Title *</label>
+                    <input type="text" id="title" name="title"
                         value="{{ media_details.title if media_details else '' }}"
                         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         required>
